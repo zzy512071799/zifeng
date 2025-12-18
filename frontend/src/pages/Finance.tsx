@@ -379,7 +379,7 @@ const Finance: React.FC = () => {
       
       {/* Stats Summary */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col span={8}>
+        <Col xs={8} sm={8} md={8} lg={8}>
           <Card>
             <Statistic
               title="总收入"
@@ -390,7 +390,7 @@ const Finance: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col span={8}>
+        <Col xs={8} sm={8} md={8} lg={8}>
           <Card>
             <Statistic
               title="总支出"
@@ -401,7 +401,7 @@ const Finance: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col span={8}>
+        <Col xs={8} sm={8} md={8} lg={8}>
           <Card>
             <Statistic
               title="结余"
@@ -461,7 +461,7 @@ const Finance: React.FC = () => {
       {/* Charts Section */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         {/* Income Distribution */}
-        <Col span={12}>
+        <Col xs={24} sm={24} md={12} lg={12}>
           <Card>
             <ReactECharts
               option={incomePieOptions}
@@ -472,7 +472,7 @@ const Finance: React.FC = () => {
         </Col>
         
         {/* Expense Distribution */}
-        <Col span={12}>
+        <Col xs={24} sm={24} md={12} lg={12}>
           <Card>
             <ReactECharts
               option={expensePieOptions}
@@ -499,6 +499,8 @@ const Finance: React.FC = () => {
         rowKey="id"
         loading={loading}
         pagination={{ pageSize: 10 }}
+        scroll={{ x: 800 }}
+        size="small"
       />
     </div>
   );

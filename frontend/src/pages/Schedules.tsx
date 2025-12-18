@@ -253,22 +253,23 @@ const Schedules: React.FC = () => {
       <Title level={3}>日程管理</Title>
       <Row gutter={[24, 24]}>
         {/* Calendar */}
-        <Col span={10}>
-          <Card title="日历" bordered={false}>
+        <Col xs={24} sm={24} md={10} lg={10}>
+          <Card title="日历" variant="outlined">
             <Calendar
               value={selectedDate}
               onSelect={handleDateSelect}
               cellRender={cellRender}
               style={{ width: '100%' }}
+              fullscreen={false}
             />
           </Card>
         </Col>
         
         {/* Schedule List */}
-        <Col span={14}>
+        <Col xs={24} sm={24} md={14} lg={14}>
           <Card 
             title={`${selectedDate.format('YYYY年MM月DD日')} 的日程`} 
-            bordered={false}
+            variant="outlined"
             extra={
               <Button 
                 type="primary" 
@@ -287,6 +288,8 @@ const Schedules: React.FC = () => {
               loading={loading}
               pagination={false}
               locale={{ emptyText: '当天没有日程' }}
+              scroll={{ x: 600 }}
+              size="small"
             />
           </Card>
         </Col>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, Select, DatePicker, Typography, message } from 'antd';
+import { Table, Button, Modal, Form, Input, Select, DatePicker, Typography, message, Space } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { getCases } from '../utils/request';
@@ -139,7 +139,7 @@ const Cases: React.FC = () => {
       title: '操作',
       key: 'action',
       render: (_: string, record: Case) => (
-        <Button.Group size="small">
+        <Space.Compact size="small">
           <Button
             type="primary"
             ghost
@@ -156,7 +156,7 @@ const Cases: React.FC = () => {
           >
             删除
           </Button>
-        </Button.Group>
+        </Space.Compact>
       ),
     },
   ];
@@ -178,10 +178,12 @@ const Cases: React.FC = () => {
         rowKey="id"
         loading={loading}
         pagination={{ pageSize: 10 }}
+        scroll={{ x: 800 }}
+        size="small"
       />
       <Modal
         title={isEditMode ? '编辑案件' : '添加案件'}
-        visible={modalVisible}
+        open={modalVisible}
         onOk={handleSubmit}
         onCancel={() => setModalVisible(false)}
       >

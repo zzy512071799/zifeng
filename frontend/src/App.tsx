@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Typography, Card, Statistic, Row, Col, Table } from 'antd';
+import { Layout, Menu, Typography, Card, Statistic, Row, Col, Table, Button } from 'antd';
 import { Link, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import {
   DashboardOutlined,
@@ -7,7 +7,8 @@ import {
   UserOutlined,
   DollarOutlined,
   CalendarOutlined,
-  LogoutOutlined
+  LogoutOutlined,
+  MenuOutlined
 } from '@ant-design/icons';
 import Cases from './pages/Cases';
 import Clients from './pages/Clients';
@@ -22,6 +23,23 @@ const { Title } = Typography;
 const App: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [collapsed, setCollapsed] = useState<boolean>(false);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+
+  // Check if screen is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+      setCollapsed(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   // Mock dashboard stats
   const stats = [
@@ -96,10 +114,20 @@ const App: React.FC = () => {
         </Routes>
       ) : (
         <Layout>
-          <Header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff' }}>
-            <Title level={2} style={{ margin: 0, color: '#1890ff' }}>律所后台管理系统</Title>
+          <Header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', padding: '0 16px' }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              {user && <span style={{ marginRight: 16 }}>欢迎, {user.name}</span>}
+              {isMobile && (
+                <Button
+                  type="text"
+                  icon={<MenuOutlined />}
+                  onClick={() => setCollapsed(!collapsed)}
+                  style={{ marginRight: 16 }}
+                />
+              )}
+              <Title level={2} style={{ margin: 0, color: '#1890ff', fontSize: isMobile ? '18px' : '24px' }}>律所后台管理系统</Title>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              {user && <span style={{ marginRight: 16, fontSize: isMobile ? '14px' : '16px' }}>欢迎, {user.name}</span>}
               <LogoutOutlined 
                 style={{ cursor: 'pointer', fontSize: '18px', color: '#666' }} 
                 onClick={handleLogout} 
@@ -107,28 +135,48 @@ const App: React.FC = () => {
             </div>
           </Header>
           <Layout>
-            <Sider width={200} style={{ background: '#fff' }}>
+            <Sider 
+              collapsible 
+              collapsed={collapsed} 
+              onCollapse={setCollapsed}
+              width={200} 
+              style={{ background: '#fff' }}
+              breakpoint="lg"
+              collapsedWidth={isMobile ? 0 : 80}
+            >
               <Menu
                 mode="inline"
                 selectedKeys={[getCurrentMenuKey()]}
                 style={{ height: '100%', borderRight: 0 }}
-              >
-                <Menu.Item key="dashboard" icon={<DashboardOutlined />}>
-                  <Link to="/">首页</Link>
-                </Menu.Item>
-                <Menu.Item key="cases" icon={<FileTextOutlined />}>
-                  <Link to="/cases">案件管理</Link>
-                </Menu.Item>
-                <Menu.Item key="clients" icon={<UserOutlined />}>
-                  <Link to="/clients">客户管理</Link>
-                </Menu.Item>
-                <Menu.Item key="finance" icon={<DollarOutlined />}>
-                  <Link to="/finance">财务管理</Link>
-                </Menu.Item>
-                <Menu.Item key="schedules" icon={<CalendarOutlined />}>
-                  <Link to="/schedules">日程管理</Link>
-                </Menu.Item>
-              </Menu>
+                theme="light"
+                items={[
+                  {
+                    key: 'dashboard',
+                    icon: <DashboardOutlined />,
+                    label: <Link to="/">{!collapsed && '首页'}</Link>
+                  },
+                  {
+                    key: 'cases',
+                    icon: <FileTextOutlined />,
+                    label: <Link to="/cases">{!collapsed && '案件管理'}</Link>
+                  },
+                  {
+                    key: 'clients',
+                    icon: <UserOutlined />,
+                    label: <Link to="/clients">{!collapsed && '客户管理'}</Link>
+                  },
+                  {
+                    key: 'finance',
+                    icon: <DollarOutlined />,
+                    label: <Link to="/finance">{!collapsed && '财务管理'}</Link>
+                  },
+                  {
+                    key: 'schedules',
+                    icon: <CalendarOutlined />,
+                    label: <Link to="/schedules">{!collapsed && '日程管理'}</Link>
+                  }
+                ]}
+              />
             </Sider>
             <Layout style={{ padding: '0 24px 24px' }}>
               <Content
@@ -145,7 +193,7 @@ const App: React.FC = () => {
                       <Title level={3}>统计数据</Title>
                       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
                         {stats.map((stat, index) => (
-                          <Col span={6} key={index}>
+                          <Col xs={12} sm={12} md={8} lg={6} key={index}>
                             <Card
                               className="stat-card"
                               hoverable
@@ -163,7 +211,7 @@ const App: React.FC = () => {
                       </Row>
                       <Title level={3}>系统概览</Title>
                       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-                        <Col span={12}>
+                        <Col xs={24} sm={24} md={12} lg={12}>
                           <Card title="最近案件" hoverable>
                             <Table
                               dataSource={mockData.cases.slice(0, 5)}
@@ -175,10 +223,11 @@ const App: React.FC = () => {
                               ]}
                               pagination={false}
                               size="small"
+                              scroll={{ x: isMobile ? 500 : undefined }}
                             />
                           </Card>
                         </Col>
-                        <Col span={12}>
+                        <Col xs={24} sm={24} md={12} lg={12}>
                           <Card title="最近客户" hoverable>
                             <Table
                               dataSource={mockData.clients.slice(0, 5)}
@@ -190,12 +239,13 @@ const App: React.FC = () => {
                               ]}
                               pagination={false}
                               size="small"
+                              scroll={{ x: isMobile ? 500 : undefined }}
                             />
                           </Card>
                         </Col>
                       </Row>
                       <Row gutter={[16, 16]}>
-                        <Col span={12}>
+                        <Col xs={24} sm={24} md={12} lg={12}>
                           <Card title="近期日程" hoverable>
                             <Table
                               dataSource={mockData.schedules.slice(0, 5)}
@@ -210,10 +260,11 @@ const App: React.FC = () => {
                               ]}
                               pagination={false}
                               size="small"
+                              scroll={{ x: isMobile ? 500 : undefined }}
                             />
                           </Card>
                         </Col>
-                        <Col span={12}>
+                        <Col xs={24} sm={24} md={12} lg={12}>
                           <Card title="财务概览" hoverable>
                             <Table
                               dataSource={mockData.financialRecords.slice(0, 5)}
@@ -243,6 +294,7 @@ const App: React.FC = () => {
                               ]}
                               pagination={false}
                               size="small"
+                              scroll={{ x: isMobile ? 500 : undefined }}
                             />
                           </Card>
                         </Col>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, Select, DatePicker, Typography, message } from 'antd';
+import { Table, Button, Modal, Form, Input, Select, DatePicker, Typography, message, Space } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { getClients } from '../utils/request';
@@ -145,7 +145,7 @@ const Clients: React.FC = () => {
       title: '操作',
       key: 'action',
       render: (_: string, record: Client) => (
-        <Button.Group size="small">
+        <Space.Compact size="small">
           <Button
             type="primary"
             ghost
@@ -162,7 +162,7 @@ const Clients: React.FC = () => {
           >
             删除
           </Button>
-        </Button.Group>
+        </Space.Compact>
       ),
     },
   ];
@@ -184,10 +184,12 @@ const Clients: React.FC = () => {
         rowKey="id"
         loading={loading}
         pagination={{ pageSize: 10 }}
+        scroll={{ x: 800 }}
+        size="small"
       />
       <Modal
         title={isEditMode ? '编辑客户' : '添加客户'}
-        visible={modalVisible}
+        open={modalVisible}
         onOk={handleSubmit}
         onCancel={() => setModalVisible(false)}
       >
