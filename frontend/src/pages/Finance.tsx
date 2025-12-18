@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Table, Typography, Select, DatePicker, Row, Col, Card, Statistic } from 'antd';
 import { DollarOutlined, ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import ReactECharts from 'echarts-for-react';
 import { getFinancialRecords } from '../utils/request';
 import { FinancialRecord } from '../utils/mockData';
 
@@ -91,6 +92,247 @@ const Finance: React.FC = () => {
   };
 
   const stats = calculateStats();
+
+  // Calculate chart data using useMemo for performance
+  const chartData = useMemo(() => {
+    // Calculate income by payment method
+    const incomeByMethod = filteredRecords
+      .filter(record => record.type === '收入')
+      .reduce((acc: Record<string, number>, record) => {
+        acc[record.paymentMethod] = (acc[record.paymentMethod] || 0) + record.amount;
+        return acc;
+      }, {});
+
+    // Calculate expense by payment method
+    const expenseByMethod = filteredRecords
+      .filter(record => record.type === '支出')
+      .reduce((acc: Record<string, number>, record) => {
+        acc[record.paymentMethod] = (acc[record.paymentMethod] || 0) + record.amount;
+        return acc;
+      }, {});
+
+    // Group records by month for trend chart
+    const monthlyData = filteredRecords
+      .reduce((acc: Record<string, { income: number; expense: number }>, record) => {
+        const month = dayjs(record.date).format('YYYY-MM');
+        if (!acc[month]) {
+          acc[month] = { income: 0, expense: 0 };
+        }
+        if (record.type === '收入') {
+          acc[month].income += record.amount;
+        } else {
+          acc[month].expense += record.amount;
+        }
+        return acc;
+      }, {});
+
+    // Sort months chronologically
+    const sortedMonths = Object.keys(monthlyData).sort();
+    const monthlyTrend = sortedMonths.map(month => ({
+      month,
+      income: monthlyData[month].income,
+      expense: monthlyData[month].expense
+    }));
+
+    return {
+      incomeByMethod,
+      expenseByMethod,
+      monthlyTrend
+    };
+  }, [filteredRecords]);
+
+  // Pie chart options for income by payment method
+  const incomePieOptions = {
+    title: {
+      text: '收入来源分布',
+      left: 'center',
+      top: 0,
+      textStyle: {
+        fontSize: 14
+      }
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: '{a} <br/>{b}: {c} 元 ({d}%)'
+    },
+    legend: {
+      orient: 'vertical',
+      left: 'left',
+      top: 30,
+      bottom: 10
+    },
+    series: [
+      {
+        name: '收入',
+        type: 'pie',
+        radius: ['40%', '70%'],
+        avoidLabelOverlap: false,
+        itemStyle: {
+          borderRadius: 10,
+          borderColor: '#fff',
+          borderWidth: 2
+        },
+        label: {
+          show: false,
+          position: 'center'
+        },
+        emphasis: {
+          label: {
+            show: true,
+            fontSize: '14',
+            fontWeight: 'bold'
+          }
+        },
+        labelLine: {
+          show: false
+        },
+        data: Object.entries(chartData.incomeByMethod).map(([method, amount]) => ({
+          value: amount,
+          name: method
+        }))
+      }
+    ]
+  };
+
+  // Pie chart options for expense by payment method
+  const expensePieOptions = {
+    title: {
+      text: '支出方式分布',
+      left: 'center',
+      top: 0,
+      textStyle: {
+        fontSize: 14
+      }
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: '{a} <br/>{b}: {c} 元 ({d}%)'
+    },
+    legend: {
+      orient: 'vertical',
+      left: 'left',
+      top: 30,
+      bottom: 10
+    },
+    series: [
+      {
+        name: '支出',
+        type: 'pie',
+        radius: ['40%', '70%'],
+        avoidLabelOverlap: false,
+        itemStyle: {
+          borderRadius: 10,
+          borderColor: '#fff',
+          borderWidth: 2
+        },
+        label: {
+          show: false,
+          position: 'center'
+        },
+        emphasis: {
+          label: {
+            show: true,
+            fontSize: '14',
+            fontWeight: 'bold'
+          }
+        },
+        labelLine: {
+          show: false
+        },
+        data: Object.entries(chartData.expenseByMethod).map(([method, amount]) => ({
+          value: amount,
+          name: method
+        }))
+      }
+    ]
+  };
+
+  // Line chart options for monthly trend
+  const monthlyTrendOptions = {
+    title: {
+      text: '收支趋势',
+      left: 'center',
+      textStyle: {
+        fontSize: 14
+      }
+    },
+    tooltip: {
+      trigger: 'axis'
+    },
+    legend: {
+      data: ['收入', '支出'],
+      top: 30
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: chartData.monthlyTrend.map(item => item.month)
+    },
+    yAxis: {
+      type: 'value',
+      name: '金额 (元)'
+    },
+    series: [
+      {
+        name: '收入',
+        type: 'line',
+        stack: 'Total',
+        data: chartData.monthlyTrend.map(item => item.income),
+        smooth: true,
+        itemStyle: {
+          color: '#52c41a'
+        },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [{
+              offset: 0,
+              color: 'rgba(82, 196, 26, 0.5)'
+            }, {
+              offset: 1,
+              color: 'rgba(82, 196, 26, 0.1)'
+            }]
+          }
+        }
+      },
+      {
+        name: '支出',
+        type: 'line',
+        stack: 'Total',
+        data: chartData.monthlyTrend.map(item => item.expense),
+        smooth: true,
+        itemStyle: {
+          color: '#f5222d'
+        },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [{
+              offset: 0,
+              color: 'rgba(245, 34, 45, 0.5)'
+            }, {
+              offset: 1,
+              color: 'rgba(245, 34, 45, 0.1)'
+            }]
+          }
+        }
+      }
+    ]
+  };
 
   // Table columns
   const columns = [
@@ -214,6 +456,40 @@ const Finance: React.FC = () => {
             />
           </Col>
         </Row>
+      </Card>
+
+      {/* Charts Section */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        {/* Income Distribution */}
+        <Col span={12}>
+          <Card>
+            <ReactECharts
+              option={incomePieOptions}
+              style={{ height: 300 }}
+              opts={{ renderer: 'svg' }}
+            />
+          </Card>
+        </Col>
+        
+        {/* Expense Distribution */}
+        <Col span={12}>
+          <Card>
+            <ReactECharts
+              option={expensePieOptions}
+              style={{ height: 300 }}
+              opts={{ renderer: 'svg' }}
+            />
+          </Card>
+        </Col>
+      </Row>
+      
+      {/* Monthly Trend Chart */}
+      <Card style={{ marginBottom: 24 }}>
+        <ReactECharts
+          option={monthlyTrendOptions}
+          style={{ height: 400 }}
+          opts={{ renderer: 'svg' }}
+        />
       </Card>
 
       {/* Records Table */}

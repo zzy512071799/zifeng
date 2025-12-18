@@ -1,8 +1,5 @@
 import { mockData } from './mockData';
 
-// Base URL for API requests
-// const BASE_URL = '/api';
-
 // Request method type
 type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
@@ -14,6 +11,8 @@ interface RequestOptions {
 
 // API endpoints
 export const endpoints = {
+  login: '/auth/login',
+  register: '/auth/register',
   cases: '/cases',
   clients: '/clients',
   finance: '/finance',
@@ -23,11 +22,48 @@ export const endpoints = {
 // Mock API response delay in milliseconds
 const MOCK_DELAY = 300;
 
+// Mock user data for login
+const mockUsers = {
+  admin: {
+    id: '1',
+    username: 'admin',
+    email: 'admin@example.com',
+    role: 'admin',
+    name: '管理员'
+  },
+  test: {
+    id: '2',
+    username: 'test',
+    email: 'test@example.com',
+    role: 'user',
+    name: '测试用户'
+  }
+};
+
 /**
- * Mock API request function
+ * API request function with auth support
  */
 export const request = async <T>(url: string, options: RequestOptions = {}): Promise<T> => {
-  const { method = 'GET' } = options;
+  const { method = 'GET', data } = options;
+  
+  // Check if login request
+  if (url === endpoints.login && method === 'POST') {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY));
+    
+    // Mock login response
+    if ((data.username === 'admin' && data.password === 'admin123') || 
+        (data.username === 'test' && data.password === 'test123')) {
+      return {
+        data: {
+          user: mockUsers[data.username as 'admin' | 'test'],
+          accessToken: 'mock-jwt-token-' + Date.now()
+        }
+      } as unknown as T;
+    } else {
+      throw new Error('Invalid credentials');
+    }
+  }
   
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, MOCK_DELAY));
@@ -53,6 +89,16 @@ export const request = async <T>(url: string, options: RequestOptions = {}): Pro
   
   // If no mock data matches, return empty array
   return [] as unknown as T;
+};
+
+/**
+ * Login function
+ */
+export const login = async (credentials: { username: string; password: string }) => {
+  return request(endpoints.login, {
+    method: 'POST',
+    data: credentials
+  });
 };
 
 /**

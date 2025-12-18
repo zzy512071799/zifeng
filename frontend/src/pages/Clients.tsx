@@ -145,25 +145,24 @@ const Clients: React.FC = () => {
       title: '操作',
       key: 'action',
       render: (_: string, record: Client) => (
-        <div>
+        <Button.Group size="small">
           <Button
             type="primary"
+            ghost
             icon={<EditOutlined />}
-            size="small"
-            style={{ marginRight: 8 }}
             onClick={() => handleEdit(record)}
           >
             编辑
           </Button>
           <Button
             danger
+            ghost
             icon={<DeleteOutlined />}
-            size="small"
             onClick={() => handleDelete(record.id)}
           >
             删除
           </Button>
-        </div>
+        </Button.Group>
       ),
     },
   ];
